@@ -4,7 +4,8 @@ return {
     -- See `:help ibl`
     main = 'ibl',
     opts = {
-      indent = { char = '▏' },
+      -- indent = { char = '▏' },
+      indent = { char = '' },
       whitespace = { highlight = { 'whitespace' } },
       scope = { show_start = false, show_end = false },
     },
