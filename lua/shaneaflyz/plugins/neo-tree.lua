@@ -21,7 +21,7 @@ return {
       hijack_netrw_behavior = 'open_current',
       window = {
         position = 'left',
-        width = 40,
+        width = 26,
         mappings = {
           ['\\'] = 'close_window',
           ['<space>'] = {

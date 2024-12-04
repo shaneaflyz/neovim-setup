@@ -110,6 +110,8 @@ return {
 
     local servers = {
       -- See `:help lspconfig-all` for a list of all the pre-configured LSPs
+      prettierd = {},
+      prettier = {},
       css_variables = {},
       html = {},
       ts_ls = {
