@@ -16,8 +16,18 @@ return {
     'jay-babu/mason-nvim-dap.nvim',
 
     -- Add your own debuggers here
-    'leoluz/nvim-dap-go',
-    'microsoft/vscode-js-debug',
+    -- 'leoluz/nvim-dap-go',
+    {
+      'microsoft/vscode-js-debug',
+      build = (function()
+        if vim.loop.os_uname().sysname == 'Windows_NT' then
+          return 'npm install --legacy-peer-deps --no-save && npx gulp vsDebugServerBundle &&  (if exist out rmdir /s /q out) && move dist out'
+        else
+          return 'npm install --legacy-peer-deps --no-save && npx gulp vsDebugServerBundle && rm -rf out && mv dist out'
+        end
+      end)(),
+      version = '1.*',
+    },
     'mxsdev/nvim-dap-vscode-js',
   },
   keys = {
@@ -90,7 +100,6 @@ return {
       -- online, please don't ask me how to install them :)
       ensure_installed = {
         -- Update this to ensure that you have the debuggers for the langs you want
-        'delve',
         'js',
       },
     }
@@ -131,37 +140,131 @@ return {
     dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
     -- Install golang specific config
-    require('dap-go').setup {
-      delve = {
-        -- On Windows delve must be run attached or it crashes.
-        -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
-        detached = vim.fn.has 'win32' == 0,
+    -- require('dap-go').setup {
+    --   delve = {
+    --     -- On Windows delve must be run attached or it crashes.
+    --     -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
+    --     detached = vim.fn.has 'win32' == 0,
+    --   },
+    -- }
+
+    --
+    require('dap-vscode-js').setup {
+      node_path = 'node',
+      debugger_path = vim.fn.stdpath 'data' .. '\\lazy\\vscode-js-debug',
+      adapters = {
+        'chrome',
+        'pwa-node',
+        'pwa-chrome',
+        'pwa-msedge',
+        'pwa-extensionHost',
+        'node-terminal',
       },
     }
-    require('dap-vscode-js').setup {
-      debugger_path = vim.fn.stdpath 'data' .. '/lazy/vscode-js-debug',
-      debugger_cmd = { 'js-debug-adapter' },
-      adapters = { 'chrome', 'pwa-node', 'pwa-chrome', 'pwa-msedge', 'node-terminal', 'pwa-extensionHost' },
+    local js_based_languages = {
+      'typescript',
+      'javascript',
+      'typescriptreact',
+      'javascriptreact',
+      'vue',
     }
-    for _, language in ipairs { 'typescriptreact', 'typescript', 'javascriptreact', 'javascript' } do
+    for _, language in ipairs(js_based_languages) do
       dap.configurations[language] = {
+        -- Debug single nodejs files
+        {
+          type = 'pwa-node',
+          request = 'launch',
+          name = 'Launch file',
+          program = '${file}',
+          cwd = vim.fn.getcwd(),
+          sourceMaps = true,
+        },
+        -- Debug nodejs processes (make sure to add --inspect when you run the process)
+        {
+          type = 'pwa-node',
+          request = 'attach',
+          name = 'Attach',
+          processId = require('dap.utils').pick_process,
+          cwd = vim.fn.getcwd(),
+          sourceMaps = true,
+        },
+        -- Debug web applications (client side)
         {
           type = 'pwa-chrome',
           request = 'launch',
-          name = 'Launch Chrome with "localhost"',
-          url = 'http://localhost:9000',
-          webRoot = '${workspaceFolder}',
+          name = 'Launch & Debug Chrome',
+          url = function()
+            local co = coroutine.running()
+            return coroutine.create(function()
+              vim.ui.input({
+                prompt = 'Enter URL: ',
+                default = vim.g.default_website_launch,
+              }, function(url)
+                if url == nil or url == '' then
+                  return
+                else
+                  vim.g.default_website_launch = url
+                  coroutine.resume(co, url)
+                end
+              end)
+            end)
+          end,
+          webRoot = vim.fn.getcwd(),
           protocol = 'inspector',
           sourceMaps = true,
           userDataDir = false,
-          skipFiles = { '<node_internals>/**', 'node_modules/**', '${workspaceFolder}/node_modules/**' },
-          resolveSourceMapLocations = {
-            '${workspaceFolder}/apps/**/**',
-            '${workspaceFolder}/**',
-            '!**/node_modules/**',
-          },
         },
       }
     end
+
+    -- for _, adapters in ipairs { 'pwa-chrome' } do
+    --   dap.adapters[adapters] = {
+    --     {
+    --       type = 'server',
+    --       host = 'localhost',
+    --       port = '${port}',
+    --       executable = {
+    --         command = 'node',
+    --         args = {
+    --           require('mason-registry').get_package('js-debug-adapter'):get_install_path() .. '\\js-debug\\src\\dapDebugServer.js',
+    --           '${port}',
+    --         },
+    --       },
+    --     },
+    --   }
+    -- end
+    -- for _, lang in ipairs {
+    --   'typescript',
+    --   'javascript',
+    --   'typescriptreact',
+    --   'javascriptreact',
+    -- } do
+    --   dap.configurations[lang] = dap.configurations[lang] or {}
+    --   table.insert(dap.configurations[lang], {
+    --     type = 'pwa-chrome',
+    --     request = 'launch',
+    --     name = 'Launch Chrome',
+    --     url = 'http://localhost:9000',
+    --     sourceMaps = true,
+    --     webRoot = vim.fn.getcwd(),
+    --   })
+    -- end
+    --
+    -- for _, language in ipairs { 'typescriptreact', 'typescript', 'javascriptreact', 'javascript' } do
+    --   dap.configurations[language] = {
+    --     {
+    --
+    --       type = 'chrome',
+    --       request = 'attach',
+    --       url = 'http://local:9000',
+    --       program = '${file}',
+    --       cwd = vim.fn.getcwd(),
+    --       sourceMaps = true,
+    --       protocol = 'inspector',
+    --       port = 9222,
+    --       webRoot = '${workspaceFolder}',
+    --     },
+    -- }
+    -- end
   end,
 }
