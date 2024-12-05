@@ -1,15 +1,9 @@
--- debug.lua
---
--- Shows how to use the DAP plugin to debug your code.
---
 -- Primarily focused on configuring the debugger for Go, but can
 -- be extended to other languages as well. That's why it's called
 -- kickstart.nvim and not kitchen-sink.nvim ;)
 
 return {
-  -- NOTE: Yes, you can install new plugins here!
   'mfussenegger/nvim-dap',
-  -- NOTE: And you can specify dependencies as well
   dependencies = {
     -- Creates a beautiful debugger UI
     'rcarriga/nvim-dap-ui',
@@ -23,6 +17,8 @@ return {
 
     -- Add your own debuggers here
     'leoluz/nvim-dap-go',
+    'microsoft/vscode-js-debug',
+    'mxsdev/nvim-dap-vscode-js',
   },
   keys = {
     -- Basic debugging keymaps, feel free to change to your liking!
@@ -95,15 +91,13 @@ return {
       ensure_installed = {
         -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
+        'js',
       },
     }
 
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
     dapui.setup {
-      -- Set icons to characters that are more likely to work in every terminal.
-      --    Feel free to remove or use ones that you like more! :)
-      --    Don't feel like these are good choices.
       icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
       controls = {
         icons = {
@@ -144,5 +138,30 @@ return {
         detached = vim.fn.has 'win32' == 0,
       },
     }
+    require('dap-vscode-js').setup {
+      debugger_path = vim.fn.stdpath 'data' .. '/lazy/vscode-js-debug',
+      debugger_cmd = { 'js-debug-adapter' },
+      adapters = { 'chrome', 'pwa-node', 'pwa-chrome', 'pwa-msedge', 'node-terminal', 'pwa-extensionHost' },
+    }
+    for _, language in ipairs { 'typescriptreact', 'typescript', 'javascriptreact', 'javascript' } do
+      dap.configurations[language] = {
+        {
+          type = 'pwa-chrome',
+          request = 'launch',
+          name = 'Launch Chrome with "localhost"',
+          url = 'http://localhost:9000',
+          webRoot = '${workspaceFolder}',
+          protocol = 'inspector',
+          sourceMaps = true,
+          userDataDir = false,
+          skipFiles = { '<node_internals>/**', 'node_modules/**', '${workspaceFolder}/node_modules/**' },
+          resolveSourceMapLocations = {
+            '${workspaceFolder}/apps/**/**',
+            '${workspaceFolder}/**',
+            '!**/node_modules/**',
+          },
+        },
+      }
+    end
   end,
 }
