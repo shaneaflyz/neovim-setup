@@ -15,16 +15,16 @@ return {
     -- - sd'   - [S]urround [D]elete [']quotes
     -- - sr)'  - [S]urround [R]eplace [)] [']
     require('mini.surround').setup()
-    require('mini.animate').setup {
-      resize = {
-        timing = require('mini.animate').gen_timing.linear { duration = 50, unit = 'total' },
-      },
-      scroll = {
-        timing = require('mini.animate').gen_timing.linear { duration = 150, unit = 'total' },
-      },
-      cursor = {
-        timing = require('mini.animate').gen_timing.linear { duration = 150, unit = 'total' },
-      },
-    }
+    -- require('mini.animate').setup {
+    --   resize = {
+    --     timing = require('mini.animate').gen_timing.linear { duration = 50, unit = 'total' },
+    --   },
+    --   scroll = {
+    --     timing = require('mini.animate').gen_timing.linear { duration = 150, unit = 'total' },
+    --   },
+    --   cursor = {
+    --     timing = require('mini.animate').gen_timing.linear { duration = 150, unit = 'total' },
+    --   },
+    -- }
   end,
 }
