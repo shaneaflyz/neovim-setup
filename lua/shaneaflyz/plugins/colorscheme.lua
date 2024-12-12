@@ -208,7 +208,7 @@ return {
 
         theme = {
           variant = 'default', -- use "light" for the light variant. Also accepts "auto" to set dark or light colors based on the current value of `vim.o.background`
-          saturation = 0.8, -- accepts a value between 0 and 1. 0 will be fully desaturated (greyscale) and 1 will be the full color (default)
+          saturation = 0.6, -- accepts a value between 0 and 1. 0 will be fully desaturated (greyscale) and 1 will be the full color (default)
           highlights = {
             -- Highlight groups to override, adding new groups is also possible
             -- See `:h highlight-groups` for a list of highlight groups or run `:hi` to see all groups and their current values
@@ -232,7 +232,7 @@ return {
           colors = {
             -- For a list of colors see `lua/cyberdream/colours.lua`
             -- Example:
-            bg = '#1e1e29',
+            bg = '#23232f',
             -- green = '#00ff00',
             -- magenta = '#ff00ff',
           },
